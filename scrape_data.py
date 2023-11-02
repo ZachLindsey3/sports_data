@@ -56,15 +56,17 @@ def get_player_by_letter(letter):
 
 
 def main():
-    letter = 'A'
-
-    # player_df = get_player_by_letter(letter)
-    # print(player_df)
     player_letter_list = []
+
     for letter in string.ascii_uppercase:
         player_letter_list.append(get_player_by_letter(letter))
         print(letter)
         time.sleep(5)
+
+    full_player_list = pd.concat(player_letter_list, ignore_index=True)
+    full_player_list['player_id'] = full_player_list.index
+    full_player_list.to_csv('./data/player_name_data.csv')
+    print(full_player_list)
     
     print("goodbye world")
 
