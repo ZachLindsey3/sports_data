@@ -13,26 +13,7 @@ stat_addresses = {'defense_rb' : ('fantasy-points-against-RB.htm', 0),
                   'defense_team' : ('opp.htm', 0),
                   }
 
-#code to scrape a single seasons data
-def single(season):
-    url = f'https://www.pro-football-reference.com/years/{season}/scoring.htm'
-    table_html = BeautifulSoup(urlopen(url), 'html.parser').findAll('table')
-    df = pd.read_html(str(table_html))[0]
-    df = df.drop('Rk', 1) # drop Rk columns
-    df.Player = df.Player.str.replace('*','') # remove asterisk on player's name
-    df.insert(0,'Season',season) # insert season column
-    df = df.apply(pd.to_numeric, errors='coerce').fillna(df) # convert non string values to numeric
-    return df
-
-##function to scrape multiple seasons of data at a time
-def multiple(start_year,end_year):
-    df = single(start_year)
-    while start_year < end_year:
-        time.sleep(4)                     ##code sleeps for 4 seconds between calls as 20 requests per minute 
-        start_year = start_year + 1       ##are allowed meaning only 15 requests per minute will be made here
-        df = df.append(single(start_year))
-    return df
-
+#scrape all player data of players starting with a certain letter
 def get_player_by_letter(letter):
     player_index_url = f'https://www.pro-football-reference.com/players/{letter}/'
 
@@ -54,19 +35,25 @@ def get_player_by_letter(letter):
 
     return(pd.DataFrame(data=player_tuple_list, columns=['name', 'address', 'start_year', 'end_year']))
 
-
-def main():
+#scrape all player data of players starting with letters within a range "letters"
+def get_all_letters(letters=string.ascii_uppercase):
     player_letter_list = []
 
-    for letter in string.ascii_uppercase:
+    #loop through letters and apply get_player_by_letter function
+    for letter in letters:
         player_letter_list.append(get_player_by_letter(letter))
-        print(letter)
+        print(letter) #prints the letter as it is scraped (can be turned off)
         time.sleep(5)
 
+    #concatenate all player data into a single df
     full_player_list = pd.concat(player_letter_list, ignore_index=True)
     full_player_list['player_id'] = full_player_list.index
-    full_player_list.to_csv('./data/player_name_data.csv')
-    print(full_player_list)
+    return(full_player_list)
+
+def main():
+    player_link_data = get_all_letters()
+    player_link_data.to_csv('./data/player_name_data.csv')
+    print(player_link_data)
     
     print("goodbye world")
 
