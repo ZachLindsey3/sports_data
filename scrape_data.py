@@ -50,11 +50,33 @@ def get_all_letters(letters=string.ascii_uppercase):
     full_player_list['player_id'] = full_player_list.index
     return(full_player_list)
 
+def get_all_teams():
+    team_index_url = 'https://www.pro-football-reference.com/teams/'
+
+    team_html = BeautifulSoup(urlopen(team_index_url), 'html.parser').findAll('table')
+    teams = team_html[0].findAll('th')
+    current_team_list = []
+
+    for team in teams:
+        if re.findall('(?<=href\=\")(.*)(?=\")', str(team)):
+            current_team_list.append(re.findall('(?<=href\=\")(.*)(?=\")', str(team))[0])
+
+    return(current_team_list)
+
+#Switch to lacrosse
+
 def main():
-    player_link_data = get_all_letters()
-    player_link_data.to_csv('./data/player_name_data.csv')
-    print(player_link_data)
-    
+    # player_link_data = get_all_letters()
+    # player_link_data.to_csv('./data/player_name_data.csv')
+
+    # player_link_data = pd.read_csv('./data/player_name_data.csv')
+    # modern_player_link_data = player_link_data.query('start_year > 2010')
+    # print(modern_player_link_data)
+
+    # current_team_list = get_all_teams()
+
+    # print(len(current_team_list))
+
     print("goodbye world")
 
 if __name__ == "__main__":
