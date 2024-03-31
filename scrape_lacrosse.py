@@ -3,7 +3,8 @@ import string
 import time
 import pandas as pd
 
-from urllib.request import urlopen
+import urllib
+from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 
 stat_addresses = {'defense_rb' : ('fantasy-points-against-RB.htm', 0),
@@ -50,30 +51,62 @@ def get_all_letters(letters=string.ascii_uppercase):
     full_player_list['player_id'] = full_player_list.index
     return(full_player_list)
 
-def get_all_teams():
-    team_index_url = 'https://www.pro-football-reference.com/teams/'
+# def get_all_teams():
+#     team_index_url = 'https://www.pro-football-reference.com/teams/'
+
+#     team_html = BeautifulSoup(urlopen(team_index_url), 'html.parser').findAll('table')
+#     teams = team_html[0].findAll('th')
+#     current_team_list = []
+
+#     for team in teams:
+#         if re.findall('(?<=href\=\")(.*)(?=\")', str(team)):
+#             current_team_list.append(re.findall('(?<=href\=\")(.*)(?=\")', str(team))[0])
+
+#     return(current_team_list)
+
+def getLinks(link_table, regex='player_id\=(.*)\&amp'):
+    link_list = []
+    for link in link_table:
+        link_list.append(re.findall(regex, str(link))[0])
+
+    return(link_list)
+
+def getPlayersByTeamSeason(team='virginia', season='2024'):
+    team_index_url = f'https://www.lax.com/team?url_name={team}&year={season}'
+    team_html = BeautifulSoup(urlopen(team_index_url), 'html.parser').findAll('table')
+
+    player_table = team_html[1]
+    player_df = pd.read_html(str(player_table))[0]
+    player_df['Player_IDs'] = getLinks(player_table.findAll('a'), regex='player_id\=(.*)\&amp')
+
+    goalie_table = team_html[2]
+    goalie_df = pd.read_html(str(goalie_table))[0]
+    goalie_df['Player_IDs'] = getLinks(goalie_table.findAll('a'), regex='player_id\=(.*)\&amp')
+
+    print("++++++")
+    print(player_df)
+    print("++++++")
+    print(goalie_df)
+
+
+def getPlayerStatsBySeason(team='uva', season='2024'):
+    team_index_url = f'https://www.lax.com/player?player_id=46&year={season}'
 
     team_html = BeautifulSoup(urlopen(team_index_url), 'html.parser').findAll('table')
+    # print(team_html)
     teams = team_html[0].findAll('th')
-    current_team_list = []
+    print(teams)
+    print("++++++++")
 
-    for team in teams:
-        if re.findall('(?<=href\=\")(.*)(?=\")', str(team)):
-            current_team_list.append(re.findall('(?<=href\=\")(.*)(?=\")', str(team))[0])
+    # table = BeautifulSoup.find_all('table')
+    df = pd.read_html(str(team_html))[0]
+    print(df)
 
-    return(current_team_list)
+    return(0)
 
 def main():
-    # player_link_data = get_all_letters()
-    # player_link_data.to_csv('./data/player_name_data.csv')
-
-    # player_link_data = pd.read_csv('./data/player_name_data.csv')
-    # modern_player_link_data = player_link_data.query('start_year > 2010')
-    # print(modern_player_link_data)
-
-    current_team_list = get_all_teams()
-
-    print(len(current_team_list))
+    getPlayerStatsBySeason()
+    getPlayersByTeamSeason()
 
     print("goodbye world")
 
